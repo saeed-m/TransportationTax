@@ -1,0 +1,187 @@
+﻿@page "/"
+@using TransportationTax.Services.Contracts
+@using TransportationTax.DomainClasses.Entities
+@inherits OwningComponentBase<IManagmentService>
+@using TransportationTax.BlazorClient.Components
+
+<PageTitle>Congestion Taxes</PageTitle>
+<div class="card">
+    <div class="card-header text-center">
+        <h3>Congestion Taxes List</h3>
+        <button class="btn btn-success" @onclick="ShowAddModal">
+            <i class="fa fa-add"/>
+            Add New congestion Tax</button>
+
+    </div>
+    <div class="card-body">
+        @if (congestionTaxes.Any())
+        {
+
+
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr style="text-align:center">
+                        <th><i class="fa fa-record-vinyl" /></th>
+                        <th> <i class="fa fa-clock-four" />&nbsp; From Time</th>
+                        <th><i class="fa fa-clock-four" />&nbsp; To Time</th>
+                        <th><i class="fa fa-money-bill" />&nbsp; Tax Fee</th>
+                        <th><i class="fa fa-gears" />&nbsp; Commands</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in congestionTaxes)
+                    {
+                        <tr style="text-align:center">
+                            <td>@item.Id</td>
+                            <td>@TimeOnly.FromDateTime(item.FromTime)</td>
+                            <td>@TimeOnly.FromDateTime(item.ToTime)</td>
+                            <td>@string.Format("{0} SEK",item.TaxAmount)</td>
+                            <td>
+                                <button class="btn btn-danger" @onclick=@(async ()=>await DeletecongestionTaxAsync(item.Id))> <i class="fa fa-remove" /> Delete</button>
+                                <button class="btn btn-primary" @onclick=@(async ()=>await EditcongestionTax(item.Id))> <i class="fa fa-edit" />Edit</button>
+                            </td>
+
+                        </tr>
+
+                    }
+                </tbody>
+            </table>
+
+
+        }
+        else
+        {
+            <p>No record Found!</p>
+        }
+
+    </div>
+</div>
+
+
+@if (AddModal)
+{
+    <!-- Modal -->
+    <div class="modal" tabindex="-1" role="dialog" style="display:block">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-save" />&nbsp; Add New Congestion Tax</h5>
+                    <button type="button" class="close" data-dismiss="modal" @onclick=ShowAddModal aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <AddConGectionTaxComponent OncongestionTaxAdded="congestionTaxAdded" />
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@if (EditModal)
+{
+
+    <!-- Modal -->
+    <div class="modal" tabindex="-1" role="dialog" style="display:block">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-edit" />&nbsp;Edit Congestion Tax #@congestionTax.Id</h5>
+                    <button type="button" class="close" data-dismiss="modal" @onclick=ShowEditModal aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <EditCongestionTaxComponent congestionTax="congestionTax" OncongestionTaxEdited="congestionTaxEdited" />
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+}
+
+
+
+
+@code
+{
+    private bool EditModal = false;
+    private bool AddModal = false;
+
+    private IManagmentService managmentService => Service;
+    List<CongestionTax> congestionTaxes = new List<CongestionTax>();
+
+    private CongestionTax congestionTax = new CongestionTax();
+
+    protected override async Task OnInitializedAsync()
+    {
+        congestionTaxes = await managmentService.GetAllCongestionTaxAsync();
+
+    }
+    public void ShowEditModal()
+    {
+        if (EditModal)
+        {
+            EditModal = false;
+        }
+        else
+        {
+
+            EditModal = true;
+        }
+    }
+
+    public void ShowAddModal()
+    {
+        if (AddModal)
+        {
+            AddModal = false;
+        }
+        else
+        {
+
+            AddModal = true;
+        }
+
+
+    }
+
+
+    private async Task DeletecongestionTaxAsync(int Id)
+    {
+        await managmentService.DeleteCongestionTaxAsync(Id);
+
+        var CongestionTaxtoremovefromlocallist = congestionTaxes.Single(c => c.Id == Id);
+        congestionTaxes.Remove(CongestionTaxtoremovefromlocallist);
+
+    }
+
+    private async Task EditcongestionTax(int Id)
+    {
+
+        EditModal = true;
+        congestionTax = congestionTaxes.Single(c => c.Id == Id);
+    }
+
+    protected async Task congestionTaxEdited(CongestionTax Edited)
+    {
+        var recordtoEdit = congestionTaxes.Single(c => c.Id == Edited.Id);
+        congestionTaxes.Remove(recordtoEdit);
+        congestionTaxes.Add(Edited);
+        EditModal = false;
+
+    }
+
+    protected async Task congestionTaxAdded(CongestionTax added)
+    {
+        congestionTaxes.Add(added);
+        AddModal = false;
+    }
+}
+
+

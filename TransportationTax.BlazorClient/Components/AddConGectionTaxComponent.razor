@@ -1,0 +1,46 @@
+﻿@using TransportationTax.Services.Contracts
+@using TransportationTax.DomainClasses.Entities
+@inherits OwningComponentBase<IManagmentService>
+<div class="card">
+    <EditForm Model="congestionTax" OnValidSubmit="AddNewcongestionTaxAsync">
+        <div class="form-group">
+            <label for="FromTime">From Time</label>
+            <RadzenDatePicker @bind-Value="congestionTax.FromTime" class="form-control" ShowTime="true" TimeOnly="true" DateFormat="HH:mm" />
+
+        </div>
+        <div class="form-group">
+            <label for="ToTime">To Time</label>
+
+            <RadzenDatePicker @bind-Value="congestionTax.ToTime" class="form-control" ShowTime="true" TimeOnly="true" DateFormat="HH:mm" />
+
+        </div>
+        <div class="form-group">
+            <label for="Amount">Tax Amount</label>
+            <InputNumber @bind-Value="congestionTax.TaxAmount" class="form-control" placeholder="Tax Amount" />
+        </div>
+
+        <button type="submit" class="btn btn-success"><i class="fa fa-save"/>&nbsp; Save</button>
+    </EditForm>
+
+
+</div>
+
+@code {
+    private IManagmentService managmentService => Service;
+    private CongestionTax congestionTax=new CongestionTax();
+
+    private async Task AddNewcongestionTaxAsync()
+    {
+        await managmentService.AddCongestionTax(congestionTax);
+        await OncongestionTaxAdded.InvokeAsync(congestionTax);
+        congestionTax = new CongestionTax();
+        
+
+
+    }
+
+    [Parameter]
+    public EventCallback<CongestionTax> OncongestionTaxAdded { get; set; }
+
+
+}
